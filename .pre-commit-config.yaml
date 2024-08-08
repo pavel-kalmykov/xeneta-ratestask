@@ -30,11 +30,3 @@ repos:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --show-fixes]
       - id: ruff-format
-
-
-  - repo: https://github.com/tconbeer/sqlfmt
-    rev: v0.23.2
-    hooks:
-      - id: sqlfmt
-        language_version: python
-        exclude: db_scripts/init_db.sql
