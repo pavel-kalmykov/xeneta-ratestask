@@ -11,6 +11,7 @@ fastapi = "^0.112.0"
 uvicorn = "^0.30.5"
 sqlalchemy = "^2.0.32"
 psycopg2-binary = "^2.9.9"
+pydantic-settings = "^2.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.7.1"
@@ -19,6 +20,8 @@ pre-commit = "^3.7.1"
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.2"
 httpx = "^0.27.0"
+pytest-xdist = "^3.6.1"
+pytest-sugar = "^1.0.0"
 
 [tool.ruff]
 line-length = 88
@@ -34,6 +37,11 @@ lint.ignore = [
     "C901",  # max-complexity-10
     "E501",  # line-too-long
 ]
+
+[tool.pytest.ini_options]
+addopts = "-ra -n auto"
+# -- optional, but recommended:
+python_files = ["test_*.py", "*_test.py", "tests.py"]
 
 [build-system]
 requires = ["poetry-core"]
