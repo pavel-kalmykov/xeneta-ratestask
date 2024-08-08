@@ -53,3 +53,12 @@ def test_get_rates_incorrect_date_range():
     assert response.status_code == 422
     data = response.json()
     assert "date_to must be after date_from" in data["detail"][0]["msg"]
+
+
+def test_get_rates_too_large_date_range():
+    response = client.get(
+        "/rates?date_from=2016-01-01&date_to=2016-02-10&origin=CNSGH&destination=north_europe_main"
+    )
+    assert response.status_code == 422
+    data = response.json()
+    assert "[date_from-date_to] range must be less than" in data["detail"][0]["msg"]
