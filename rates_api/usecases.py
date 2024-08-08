@@ -1,6 +1,7 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from rates_api.config import settings
 from rates_api.models import DailyPrice, GetRatesParams
 
 
@@ -16,7 +17,7 @@ def get_average_prices(
             "destination": get_rate_params.destination,
             "date_from": get_rate_params.date_from,
             "date_to": get_rate_params.date_to,
-            "min_prices_per_day": 3,
+            "min_prices_per_day": settings.min_prices_per_day,
         },
     )
 

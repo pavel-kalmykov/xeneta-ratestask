@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:ratestask@localhost/postgres"
+from rates_api.config import settings
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(settings.database_url.unicode_string())
 session_factory = sessionmaker(bind=engine)
 
 Base = declarative_base()
