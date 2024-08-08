@@ -12,5 +12,7 @@ class Settings(BaseSettings):
     min_prices_per_day: int = 3
     max_days_interval: int = 30
 
+    log_level: str = "INFO"
+
 
 settings = Settings()
