@@ -107,7 +107,7 @@ pip-selfcheck.json
 *.vsix
 
 ### dotenv template
-.env
+*.env
 
 ### pydev template
 .pydevproject
