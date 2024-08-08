@@ -1,23 +1,21 @@
-from datetime import date
-
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from rates_api.models import DailyPrice
+from rates_api.models import DailyPrice, GetRatesParams
 
 
 def get_average_prices(
-    db: Session, date_from: date, date_to: date, origin: str, destination: str
+    db: Session, get_rate_params: GetRatesParams
 ) -> list[DailyPrice]:
     with open("db_scripts/rates-query.sql") as f:
         query = text(f.read())
     result = db.execute(
         query,
         {
-            "origin": origin,
-            "destination": destination,
-            "date_from": date_from,
-            "date_to": date_to,
+            "origin": get_rate_params.origin,
+            "destination": get_rate_params.destination,
+            "date_from": get_rate_params.date_from,
+            "date_to": get_rate_params.date_to,
             "min_prices_per_day": 3,
         },
     )

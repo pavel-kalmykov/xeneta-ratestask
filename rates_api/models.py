@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from sqlalchemy import Column, Date, ForeignKey, Integer, String
 
 from rates_api.database import Base
@@ -35,3 +35,14 @@ class Price(Base):
 class DailyPrice(BaseModel):
     day: date
     average_price: int | None
+
+
+class GetRatesParams(BaseModel):
+    date_from: date
+    date_to: date
+    origin: str
+    destination: str
+
+    @model_validator(mode="after")
+    def date_to_must_be_after_date_from(self):
+        assert self.date_from <= self.date_to, "date_to must be after date_from"

@@ -13,6 +13,8 @@ def test_get_rates_example():
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 10  # 10 days of data
+    assert all(isinstance(day["day"], str) for day in data)
+    assert all(isinstance(day["average_price"], (int, type(None))) for day in data)
 
     day1 = data[0]
     assert day1["day"] == "2016-01-01"
@@ -30,3 +32,24 @@ def test_get_rates_example():
     day10 = data[9]
     assert day10["day"] == "2016-01-10"
     assert day10["average_price"] == 1124
+
+
+def test_get_rates_missing_parameters():
+    response = client.get("/rates")
+    assert response.status_code == 422
+
+
+def test_get_rates_incorrect_date_format():
+    response = client.get(
+        "/rates?date_from=yesterday&date_to=now&origin=CNSGH&destination=north_europe_main"
+    )
+    assert response.status_code == 422
+
+
+def test_get_rates_incorrect_date_range():
+    response = client.get(
+        "/rates?date_from=2016-01-01&date_to=2015-01-10&origin=CNSGH&destination=north_europe_main"
+    )
+    assert response.status_code == 422
+    data = response.json()
+    assert "date_to must be after date_from" in data["detail"][0]["msg"]
