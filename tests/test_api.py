@@ -62,3 +62,21 @@ def test_get_rates_too_large_date_range():
     assert response.status_code == 422
     data = response.json()
     assert "[date_from-date_to] range must be less than" in data["detail"][0]["msg"]
+
+
+def test_get_rates_wrong_origin():
+    response = client.get(
+        "/rates?date_from=2016-01-01&date_to=2016-01-10&origin=MYHOUSE&destination=north_europe_main"
+    )
+    assert response.status_code == 404
+    data = response.json()
+    assert "Could not find port/region: MYHOUSE" in data["detail"]
+
+
+def test_get_rates_wrong_destination():
+    response = client.get(
+        "/rates?date_from=2016-01-01&date_to=2016-01-10&origin=CNSGH&destination=santa_pola"
+    )
+    assert response.status_code == 404
+    data = response.json()
+    assert "Could not find port/region: santa_pola" in data["detail"]

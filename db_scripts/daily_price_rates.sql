@@ -1,16 +1,25 @@
--- 1. We start with a **recursive** CTE to find all regions relevant to our query,
--- including sub-regions of the origin and destination.
 with recursive
-    region_hierarchy as (
+    -- 1. We start with two **recursive** CTEs to find all regions relevant to our
+    -- query, including sub-regions of the origin and destination.
+    origin_region_hierarchy as (
         -- Start with the initial regions (origin and destination).
         select slug
         from regions
-        where slug in (:origin, :destination)
+        where slug = :origin
         union all
         -- Recursively add all children regions.
         select r.slug
         from regions r
-        join region_hierarchy rh on r.parent_slug = rh.slug
+        join origin_region_hierarchy rh on r.parent_slug = rh.slug
+    ),
+    destination_region_hierarchy as (
+        select slug
+        from regions
+        where slug = :destination
+        union all
+        select r.slug
+        from regions r
+        join destination_region_hierarchy rh on r.parent_slug = rh.slug
     ),
     -- 2. We then use two CTEs to find all relevant origin and destination ports,
     -- unionising ports in the specified regions (and their recursive sub-regions).
@@ -24,7 +33,7 @@ with recursive
         -- the magic happens).
         select code
         from ports
-        join region_hierarchy rh on parent_slug = rh.slug
+        join origin_region_hierarchy rh on parent_slug = rh.slug
     ),
     destination_ports as (
         select code
@@ -33,7 +42,7 @@ with recursive
         union
         select code
         from ports
-        join region_hierarchy rh on parent_slug = rh.slug
+        join destination_region_hierarchy rh on parent_slug = rh.slug
     ),
     -- 3. Now we calculate the average prices for origin and destination
     -- ports, filtering by date and ensuring we have at least n rows per day.
