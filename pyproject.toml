@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "rates-api"
+version = "0.1.0"
+description = "Xeneta's Rate API task"
+authors = ["Pavel Kalmykov Razgovorov <pavel.granalacant@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = {extras = ["standard"], version = "^0.112.0"}
+uvicorn = "^0.30.5"
+sqlalchemy = "^2.0.32"
+psycopg2-binary = "^2.9.9"
+pydantic-settings = "^2.4.0"
+alembic = "^1.13.2"
+fastapi-cache2 = {extras = ["redis"], version = "^0.2.2"}
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.7.1"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.3.2"
+httpx = "^0.27.0"
+pytest-xdist = "^3.6.1"
+pytest-sugar = "^1.0.0"
+
+[tool.ruff]
+line-length = 88
+lint.select = [
+    "C",  # mccabe rules
+    "F",  # pyflakes rules
+    "E",  # pycodestyle error rules
+    "W",  # pycodestyle warning rules
+    "B",  # flake8-bugbear rules
+    "I",  # isort rules
+]
+lint.ignore = [
+    "C901",  # max-complexity-10
+    "E501",  # line-too-long
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra -n auto"
+# -- optional, but recommended:
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
