@@ -1,26 +1,9 @@
-with recursive
+with
     -- 1. We start with two **recursive** CTEs to find all regions relevant to our
     -- query, including sub-regions of the origin and destination.
-    origin_region_hierarchy as (
-        -- Start with the initial regions (origin and destination).
-        select slug
-        from regions
-        where slug = :origin
-        union all
-        -- Recursively add all children regions.
-        select r.slug
-        from regions r
-        join origin_region_hierarchy rh on r.parent_slug = rh.slug
-    ),
-    destination_region_hierarchy as (
-        select slug
-        from regions
-        where slug = :destination
-        union all
-        select r.slug
-        from regions r
-        join destination_region_hierarchy rh on r.parent_slug = rh.slug
-    ),
+    -- UPDATE: We don't do that anymore because we turned that recursive CTE into
+    -- a materialized view (because regions hardly change)
+    --
     -- 2. We then use two CTEs to find all relevant origin and destination ports,
     -- unionising ports in the specified regions (and their recursive sub-regions).
     origin_ports as (
@@ -32,8 +15,9 @@ with recursive
         -- Include all the ports in the origin region recursively (this is where
         -- the magic happens).
         select code
-        from ports
-        join origin_region_hierarchy rh on parent_slug = rh.slug
+        from ports p
+        join mv_region_hierarchy rh on p.parent_slug = rh.slug
+        where rh.slug = :origin or rh.parent_slug = :origin
     ),
     destination_ports as (
         select code
@@ -41,8 +25,9 @@ with recursive
         where code = :destination
         union
         select code
-        from ports
-        join destination_region_hierarchy rh on parent_slug = rh.slug
+        from ports p
+        join mv_region_hierarchy rh on p.parent_slug = rh.slug
+        where rh.slug = :destination or rh.parent_slug = :destination
     ),
     -- 3. Now we calculate the average prices for origin and destination
     -- ports, filtering by date and ensuring we have at least n rows per day.

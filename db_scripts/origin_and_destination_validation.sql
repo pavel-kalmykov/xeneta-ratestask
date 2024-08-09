@@ -1,31 +1,15 @@
--- This query shares
-with recursive
-    origin_region_hierarchy as (
-        select slug
-        from regions
-        where slug = :origin
-        union all
-        select r.slug
-        from regions r
-        join origin_region_hierarchy rh on r.parent_slug = rh.slug
-    ),
-    destination_region_hierarchy as (
-        select slug
-        from regions
-        where slug = :destination
-        union all
-        select r.slug
-        from regions r
-        join destination_region_hierarchy rh on r.parent_slug = rh.slug
-    ),
+-- This query shares the first part of daily_price_rates.sql.
+-- Check that file for more info
+with
     origin_ports as (
         select code
         from ports
         where code = :origin
         union
         select code
-        from ports
-        join origin_region_hierarchy rh on parent_slug = rh.slug
+        from ports p
+        join mv_region_hierarchy rh on p.parent_slug = rh.slug
+        where rh.slug = :origin or rh.parent_slug = :origin
     ),
     destination_ports as (
         select code
@@ -33,8 +17,9 @@ with recursive
         where code = :destination
         union
         select code
-        from ports
-        join destination_region_hierarchy rh on parent_slug = rh.slug
+        from ports p
+        join mv_region_hierarchy rh on p.parent_slug = rh.slug
+        where rh.slug = :destination or rh.parent_slug = :destination
     )
 select
     (select count(*) from origin_ports) as origin_matches,
