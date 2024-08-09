@@ -9,6 +9,12 @@ class Settings(BaseSettings):
     )
 
     database_url: PostgresDsn
+
+    redis_url: str
+    redis_prefix: str = "fastapi-cache"
+
+    cache_default_expire: int = 300
+
     min_prices_per_day: int = 3
     max_days_interval: int = 31
 

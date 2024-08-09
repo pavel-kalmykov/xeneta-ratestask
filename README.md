@@ -300,6 +300,9 @@ POSTGRES_PASSWORD=supersecret
 #### app.{dev,prod}.env file template
 ```dosini
 DATABASE_URL=postgresql://postgres:supersecret@db/postgres
+REDIS_URL=redis://localhost # or redis://redis
+REDIS_PREFIX=fastapi-cache
+CACHE_DEFAULT_EXPIRE=300
 MIN_PRICES_PER_DAY=3 # Prices threshold to actually return an average for a specific day
 MAX_DAYS_INTERVAL=31 # Max interval between date_from and date_to
 LOG_LEVEL=INFO

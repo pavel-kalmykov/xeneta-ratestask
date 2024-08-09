@@ -4,10 +4,15 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import RedirectResponse
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.decorator import cache
 from pydantic import ValidationError
+from redis import asyncio as aioredis
 from sqlalchemy.orm import Session
 
 from rates_api import models, usecases
+from rates_api.config import settings
 from rates_api.database import engine, get_db, run_migrations
 from rates_api.exceptions import PortOrRegionNotFoundException
 from rates_api.logging import logger
@@ -19,10 +24,18 @@ models.Base.metadata.create_all(bind=engine)
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     logger.info("Starting up...")
-    logger.info("run alembic upgrade head...")
+
+    logger.info("Connecting to cache backend...")
+    redis = aioredis.from_url(settings.redis_url)
+    FastAPICache.init(RedisBackend(redis), prefix=settings.redis_prefix)
+    logger.info("Connection to redis established")
+
+    logger.info("Run alembic upgrade head...")
     run_migrations()
-    logger.info("migrations successfully run")
+    logger.info("Migrations successfully run")
+
     yield
+
     logger.info("Shutting down...")
 
 
@@ -66,6 +79,7 @@ def main():
     ),
     response_description="List of daily price statistics",
 )
+@cache(expire=settings.cache_default_expire)
 def get_rates(
     params: Annotated[GetRatesParams, Depends()],
     db: Annotated[Session, Depends(get_db)],
