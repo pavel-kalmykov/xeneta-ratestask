@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     database_url: PostgresDsn
     min_prices_per_day: int = 3
-    max_days_interval: int = 30
+    max_days_interval: int = 31
 
     log_level: str = "INFO"
 
