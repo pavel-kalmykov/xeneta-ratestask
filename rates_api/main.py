@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Request, status
@@ -6,13 +7,25 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from rates_api import models, usecases
-from rates_api.database import engine, get_db
+from rates_api.database import engine, get_db, run_migrations
 from rates_api.exceptions import PortOrRegionNotFoundException
+from rates_api.logging import logger
 from rates_api.models import GetRatesParams
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app_: FastAPI):
+    logger.info("Starting up...")
+    logger.info("run alembic upgrade head...")
+    run_migrations()
+    logger.info("migrations successfully run")
+    yield
+    logger.info("Shutting down...")
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.exception_handler(ValidationError)
