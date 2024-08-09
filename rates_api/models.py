@@ -1,6 +1,8 @@
 from datetime import date
+from typing import Annotated
 
-from pydantic import BaseModel, model_validator
+from fastapi import Query
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import Column, Date, ForeignKey, Integer, String
 
 from rates_api.config import settings
@@ -33,16 +35,45 @@ class Price(Base):
     price = Column(Integer, nullable=False)
 
 
-class DailyPrice(BaseModel):
+class DailyPriceStats(BaseModel):
     day: date
     average_price: int | None
 
 
 class GetRatesParams(BaseModel):
-    date_from: date
-    date_to: date
-    origin: str
-    destination: str
+    date_from: Annotated[
+        date,
+        Field(
+            Query(
+                description="The starting date in YYYY-MM-DD format.",
+                example=date(2016, 1, 1),
+            )
+        ),
+    ]
+    date_to: Annotated[
+        date,
+        Field(
+            Query(
+                description="The ending date in YYYY-MM-DD format.",
+                example=date(2016, 1, 10),
+            )
+        ),
+    ]
+    origin: Annotated[
+        str,
+        Field(
+            Query(description="The origin port code or region slug.", example="CNSGH")
+        ),
+    ]
+    destination: Annotated[
+        str,
+        Field(
+            Query(
+                description="The destination port code or region slug.",
+                example="north_europe_main",
+            )
+        ),
+    ]
 
     @model_validator(mode="after")
     def date_to_must_be_after_date_from(self):
