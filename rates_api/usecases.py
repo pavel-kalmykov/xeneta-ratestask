@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from rates_api.config import settings
 from rates_api.exceptions import PortOrRegionNotFoundException
 from rates_api.logging import logger
-from rates_api.models import DailyPrice, GetRatesParams
+from rates_api.models import DailyPriceStats, GetRatesParams
 
 
 # Check commit message for more info
@@ -35,7 +35,7 @@ def validate_origin_and_destiny(db: Session, get_rate_params: GetRatesParams):
 
 def get_average_prices(
     db: Session, get_rate_params: GetRatesParams
-) -> list[DailyPrice]:
+) -> list[DailyPriceStats]:
     validate_origin_and_destiny(db, get_rate_params)
     with open("db_scripts/daily_price_rates.sql") as f:
         query = text(f.read())
@@ -54,4 +54,6 @@ def get_average_prices(
         },
     )
 
-    return [DailyPrice(day=row.day, average_price=row.average_price) for row in result]
+    return [
+        DailyPriceStats(day=row.day, average_price=row.average_price) for row in result
+    ]

@@ -1,12 +1,11 @@
 services:
   db:
     image: postgres:${PG_VERSION}
-    environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    env_file: postgres.env
     volumes:
       - ./db_scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
     ports:
-      - "${DB_PORT}:5432"
+      - ${DB_PORT}:5432
 
   rates-api:
     build:
