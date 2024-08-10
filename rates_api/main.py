@@ -42,7 +42,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     title="Rates API",
     description="An API for querying shipment rates",
-    version="1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 

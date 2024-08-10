@@ -54,6 +54,8 @@ Regarding the database model, some additional optimization have been put into pl
 
 Additionally, some (very) basic logging is implemented in order to enable some type of observability.
 
+Finally, a simple CI pipeline (using GitHub Actions) has been put in place to ensure tests are run before and after merging into long-lived branches.
+
 <details>
    <summary>In depth analysis of the queries and its optimizations</summary>
 

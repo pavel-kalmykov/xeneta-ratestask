@@ -1,0 +1,93 @@
+name: FastAPI Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v3
+
+    # We must perform this hack because GitHub Actions creates its services before running the steps,
+    # making it impossible to mount a volume between the container and a directory/file, as the checkout
+    # step (specified above) always happens afterward.
+    # In this GitHub Community discussion, this same problem is outlined, and some alternatives are given:
+    # https://github.com/orgs/community/discussions/42127. In this case, restarting the service with the
+    # mounted file as it is set in the docker-compose.yml file does not work for some reason, so the script
+    # is just directly executed.
+    #
+    # On top of this, act (https://nektosact.com) does not support giving names to containers (see related:
+    # https://github.com/nektos/act/issues/2412), so we must again perform a workaround and find the container
+    # by the exposed port if we want to run this pipeline locally.
+    - name: Run init script for Postgres
+      env:
+        GH_WORKSPACE: ${{ github.workspace }}
+      run: |
+        POSTGRES_CONTAINER=$(docker ps --format '{{.ID}}' --filter 'publish=5432')
+        if [ -z "$POSTGRES_CONTAINER" ]; then
+          echo "postgres container not found" >&2;
+          exit 1;
+        fi
+        docker exec -i $POSTGRES_CONTAINER psql -U postgres -d postgres < $GH_WORKSPACE/db_scripts/init_db.sql
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install Poetry
+      uses: abatilo/actions-poetry@v2
+
+    - name: Setup a local virtual environment (if no poetry.toml file)
+      run: |
+        poetry config virtualenvs.create true --local
+        poetry config virtualenvs.in-project true --local
+
+    - name: Define a cache for the virtual environment based on the dependencies lock file
+      uses: actions/cache@v3
+      with:
+        path: ./.venv
+        key: venv-${{ hashFiles('poetry.lock') }}
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+        REDIS_URL: redis://localhost:6379/0
+      # For some reason, multithreaded testing does not work in GitHub Actions, so only 1 core can be used
+      run: |
+        poetry run pytest -n 1
