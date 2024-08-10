@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rates-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "Xeneta's Rate API task"
 authors = ["Pavel Kalmykov Razgovorov <pavel.granalacant@gmail.com>"]
 readme = "README.md"
