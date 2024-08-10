@@ -40,6 +40,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    # We must perform this hack because GitHub Actions creates its services before running the steps,
+    # making it impossible to mount a volume between the container and a directory/file, as the checkout
+    # step (specified above) always happens afterward.
+    # In this GitHub Community discussion, this same problem is outlined, and some alternatives are given:
+    # https://github.com/orgs/community/discussions/42127. In this case, restarting the service with the
+    # mounted file as it is set in the docker-compose.yml file does not work for some reason, so the script
+    # is just directly executed.
+    #
+    # On top of this, act (https://nektosact.com) does not support giving names to containers (see related:
+    # https://github.com/nektos/act/issues/2412), so we must again perform a workaround and find the container
+    # by the exposed port if we want to run this pipeline locally.
     - name: Run init script for Postgres
       env:
         GH_WORKSPACE: ${{ github.workspace }}
@@ -77,5 +88,6 @@ jobs:
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
         REDIS_URL: redis://localhost:6379/0
+      # For some reason, multithreaded testing does not work in GitHub Actions, so only 1 core can be used
       run: |
         poetry run pytest -n 1
