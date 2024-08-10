@@ -18,11 +18,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name gh_actions_postgres
         ports:
           - 5432:5432
-        volumes:
-          - ${{ github.workspace }}/db_scripts/init/:/docker-entrypoint-initdb.d/init/
 
       redis:
         image: redis:7
@@ -37,11 +34,20 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Restart Postgres
-      # Restart Postgres after volumes have been checked out
+    - name: Run init script for Postgres
       uses: docker://docker
+      env:
+        GH_WORKSPACE: ${{ github.workspace }}
       with:
-        args: docker restart gh_actions_postgres
+        args: >
+          /bin/sh -c '
+          POSTGRES_CONTAINER=$(docker ps --format '{{.ID}}' --filter 'publish=5432') &&
+          if [ -z "$POSTGRES_CONTAINER" ]; then
+            echo "postgres container not found" >&2;
+            exit 1;
+          fi &&
+          docker exec -i $POSTGRES_CONTAINER psql -U postgres -d postgres < $GH_WORKSPACE/db_scripts/init_db.sql
+          '
 
     - name: Set up Python
       uses: actions/setup-python@v4
