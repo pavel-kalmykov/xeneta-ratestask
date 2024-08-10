@@ -39,7 +39,7 @@ jobs:
       env:
         GH_WORKSPACE: ${{ github.workspace }}
       with:
-        args: >
+        args: |
           /bin/sh -c '
           POSTGRES_CONTAINER=$(docker ps --format '{{.ID}}' --filter 'publish=5432') &&
           if [ -z "$POSTGRES_CONTAINER" ]; then
