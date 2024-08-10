@@ -46,7 +46,7 @@ class GetRatesParams(BaseModel):
         Field(
             Query(
                 description="The starting date in YYYY-MM-DD format.",
-                example=date(2016, 1, 1),
+                examples=[date(2016, 1, 1)],
             )
         ),
     ]
@@ -55,14 +55,16 @@ class GetRatesParams(BaseModel):
         Field(
             Query(
                 description="The ending date in YYYY-MM-DD format.",
-                example=date(2016, 1, 10),
+                examples=[date(2016, 1, 10)],
             )
         ),
     ]
     origin: Annotated[
         str,
         Field(
-            Query(description="The origin port code or region slug.", example="CNSGH")
+            Query(
+                description="The origin port code or region slug.", examples=["CNSGH"]
+            )
         ),
     ]
     destination: Annotated[
@@ -70,7 +72,7 @@ class GetRatesParams(BaseModel):
         Field(
             Query(
                 description="The destination port code or region slug.",
-                example="north_europe_main",
+                examples=["north_europe_main"],
             )
         ),
     ]

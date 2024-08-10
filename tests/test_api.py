@@ -1,11 +1,16 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from rates_api.main import app
 
-client = TestClient(app)
+
+@pytest.fixture
+def client():
+    with TestClient(app) as client:
+        yield client
 
 
-def test_get_rates_example():
+def test_get_rates_example(client):
     """This checks that the sample invocation shown in the assignment works"""
     response = client.get(
         "/rates?date_from=2016-01-01&date_to=2016-01-10&origin=CNSGH&destination=north_europe_main"
@@ -34,19 +39,19 @@ def test_get_rates_example():
     assert day10["average_price"] == 1124
 
 
-def test_get_rates_missing_parameters():
+def test_get_rates_missing_parameters(client):
     response = client.get("/rates")
     assert response.status_code == 422
 
 
-def test_get_rates_incorrect_date_format():
+def test_get_rates_incorrect_date_format(client):
     response = client.get(
         "/rates?date_from=yesterday&date_to=now&origin=CNSGH&destination=north_europe_main"
     )
     assert response.status_code == 422
 
 
-def test_get_rates_incorrect_date_range():
+def test_get_rates_incorrect_date_range(client):
     response = client.get(
         "/rates?date_from=2016-01-01&date_to=2015-01-10&origin=CNSGH&destination=north_europe_main"
     )
@@ -55,7 +60,7 @@ def test_get_rates_incorrect_date_range():
     assert "date_to must be after date_from" in data["detail"][0]["msg"]
 
 
-def test_get_rates_too_large_date_range():
+def test_get_rates_too_large_date_range(client):
     response = client.get(
         "/rates?date_from=2016-01-01&date_to=2016-02-10&origin=CNSGH&destination=north_europe_main"
     )
@@ -64,7 +69,7 @@ def test_get_rates_too_large_date_range():
     assert "[date_from-date_to] range must be less than" in data["detail"][0]["msg"]
 
 
-def test_get_rates_wrong_origin():
+def test_get_rates_wrong_origin(client):
     response = client.get(
         "/rates?date_from=2016-01-01&date_to=2016-01-10&origin=MYHOUSE&destination=north_europe_main"
     )
@@ -73,7 +78,7 @@ def test_get_rates_wrong_origin():
     assert "Could not find port/region: MYHOUSE" in data["detail"]
 
 
-def test_get_rates_wrong_destination():
+def test_get_rates_wrong_destination(client):
     response = client.get(
         "/rates?date_from=2016-01-01&date_to=2016-01-10&origin=CNSGH&destination=santa_pola"
     )
