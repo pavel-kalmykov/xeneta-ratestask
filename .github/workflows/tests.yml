@@ -1,0 +1,73 @@
+name: FastAPI Tests
+
+on:
+  push:
+    branches: [ '**' ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name gh_actions_postgres
+        ports:
+          - 5432:5432
+        volumes:
+          - ${{ github.workspace }}/db_scripts/init_db.sql/:/docker-entrypoint-initdb.d/init_db.sql
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Restart Postgres
+      # Restart Postgres after volumes have been checked out
+      uses: docker://docker
+      with:
+        args: docker restart gh_actions_postgres
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install Poetry
+      uses: abatilo/actions-poetry@v2
+
+    - name: Setup a local virtual environment (if no poetry.toml file)
+      run: |
+        poetry config virtualenvs.create true --local
+        poetry config virtualenvs.in-project true --local
+
+    - name: Define a cache for the virtual environment based on the dependencies lock file
+      uses: actions/cache@v3
+      with:
+        path: ./.venv
+        key: venv-${{ hashFiles('poetry.lock') }}
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+        REDIS_URL: redis://localhost:6379/0
+      run: |
+        poetry run pytest -n 1
