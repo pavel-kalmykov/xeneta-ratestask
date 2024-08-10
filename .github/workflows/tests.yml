@@ -35,19 +35,15 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Run init script for Postgres
-      uses: docker://docker
       env:
         GH_WORKSPACE: ${{ github.workspace }}
-      with:
-        args: |
-          /bin/sh -c '
-          POSTGRES_CONTAINER=$(docker ps --format '{{.ID}}' --filter 'publish=5432') &&
-          if [ -z "$POSTGRES_CONTAINER" ]; then
-            echo "postgres container not found" >&2;
-            exit 1;
-          fi &&
-          docker exec -i $POSTGRES_CONTAINER psql -U postgres -d postgres < $GH_WORKSPACE/db_scripts/init_db.sql
-          '
+      run: |
+        POSTGRES_CONTAINER=$(docker ps --format '{{.ID}}' --filter 'publish=5432')
+        if [ -z "$POSTGRES_CONTAINER" ]; then
+          echo "postgres container not found" >&2;
+          exit 1;
+        fi
+        docker exec -i $POSTGRES_CONTAINER psql -U postgres -d postgres < $GH_WORKSPACE/db_scripts/init_db.sql
 
     - name: Set up Python
       uses: actions/setup-python@v4
