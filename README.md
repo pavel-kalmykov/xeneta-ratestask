@@ -1,4 +1,4 @@
-# DBtune Assignment - Image uploader
+# Xeneta's Assignment - Rates API
 
 This is an implementation proposal for Xeneta's Rate API task .
 
